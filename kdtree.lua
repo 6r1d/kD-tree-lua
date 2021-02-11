@@ -1,13 +1,192 @@
-dofile('binary_heap.lua')
-dofile('node.lua')
+-- Binary heap implementation from:
+-- http://eloquentjavascript.net/appendix2.html
+-- Currently untested.
 
-KD_tree = {
+local BinaryHeap = {
+    content = nil,
+    scoreFunction = nil
+}
+
+function BinaryHeap:new(o, scoreFunction)
+   o = o or {}
+   setmetatable(o, self)
+   -- https://www.lua.org/pil/13.4.1.html
+   self.__index = self
+   self.content = {}
+   self.scoreFunction = scoreFunction
+   return o
+end
+
+function BinaryHeap:push(element)
+    -- Add the new element to the end of the array.
+    -- Alternative: foo[#foo+1]="bar"
+    table.insert(self.content, element)
+    -- Allow it to bubble up.
+    self:bubbleUp(#self.content - 1)
+end
+
+function BinaryHeap:pop()
+    -- Store the first element so we can return it later.
+    local result = self.content[1]
+    -- Get the element at the end of the array
+    -- https://www.lua.org/pil/19.2.html
+    -- TODO table.remove(a) or table.remove(a, 1)?
+    local array_last = table.remove(self.content)
+    -- If there are any elements left, put the end element at the
+    -- start, and let it sink down.
+    if #self.content > 0 then
+       self.content[1] = array_last
+       self.sinkDown(0)
+    end
+    return result
+end
+
+function BinaryHeap:peek()
+    return self.content[1]
+end
+
+function BinaryHeap:remove(node)
+    local len = #self.content
+    -- To remove a value, we must search through the array to find it.
+    for i=0, len, 1 do
+        if (self.content[i] == node) then
+            -- When it is found, the process seen in 'pop' is repeated
+            -- to fill up the hole.
+            local ct_end = table.remove(self.content)
+            if i ~= len - 1 then
+                self.content[i] = ct_end
+                if (self.scoreFunction(ct_end) < self.scoreFunction(node)) then
+                    self.bubbleUp(i)
+                else
+                    self.sinkDown(i)
+                end
+            end
+            return
+        end
+    end
+    print("Node not found.")
+end
+
+function BinaryHeap:size()
+    return #self.content
+end
+
+function BinaryHeap:bubbleUp(n)
+    -- Fetch the element that has to be moved.
+    local element = self.content[n]
+    -- When at 0, an element can not go up any further.
+    while (n > 0) do
+        -- Compute the parent element's index, and fetch it.
+        local parentN = math.floor((n + 1) / 2) - 1
+        local parent = self.content[parentN]
+        -- Swap the elements if the parent is greater.
+        if (self.scoreFunction(element) < self.scoreFunction(parent)) then
+            self.content[parentN] = element
+            self.content[n] = parent
+            -- Update 'n' to continue at the new position.
+            n = parentN
+        else
+            -- Found a parent that is less, no need to move it further.
+            break
+        end
+    end
+end
+
+function BinaryHeap:sinkDown(n)
+    -- Look up the target element and its score.
+    local length = #self.content
+    local element = self.content[n]
+    local elemScore = self.scoreFunction(element)
+    local child1Score
+    local child2Score
+
+    while true do
+        -- Compute the indices of the child elements.
+        local child2N = (n + 1) * 2
+        local child1N = child2N - 1
+        -- This is used to store the new position of the element, if any.
+        local swap = nil
+        -- If the first child exists (is inside the array)...
+        if child1N < length then
+            -- Look it up and compute its score.
+            local child1 = self.content[child1N]
+            child1Score = self.scoreFunction(child1)
+            -- If the score is less than our element's, we need to swap.
+            if child1Score < elemScore then
+                swap = child1N
+            end
+        end
+        -- Do the same checks for the other child.
+        if child2N < length then
+            local child2 = self.content[child2N]
+            child2Score = self.scoreFunction(child2)
+            local chkScore
+            if swap == nil then
+                chkScore = elemScore
+            else
+                chkScore = child1Score
+            end
+            if child2Score < chkScore then
+                swap = child2N
+            end
+        end
+        if swap ~= nil then
+            -- If the element needs to be moved, swap it, and continue.
+            self.content[n] = self.content[swap]
+            self.content[swap] = element
+            n = swap
+        else
+            -- Otherwise, we are done.
+            break
+        end
+    end
+end
+
+-------------------------------------------------------
+-- An implementation of kD-Tree node
+-------------------------------------------------------
+
+local Node = {
+    obj = nil,
+    left = nil,
+    right = nil,
+    parent = nil,
+    dimension = nil
+}
+
+function Node:new(o, obj, dimension, parent)
+   o = o or {}
+   setmetatable(o, self)
+   -- https://www.lua.org/pil/13.4.1.html
+   self.__index = self
+   self.obj = obj
+   self.left = nil
+   self.right = nil
+   self.parent = parent
+   self.dimension = dimension
+   return o
+end
+
+function Node:parent_nil()
+   return self.parent == nil
+end
+
+-- Both left and right tree children are unset
+function Node:children_nil()
+   return self.right == nil and self.left == nil
+end
+
+-------------------------------------
+-- kDTree
+-------------------------------------
+
+local KD_tree = {
     metric = nil,
     dimensions = nil,
     root = nil
 }
 
-function buildTree(points, dimensions, depth, parent)
+local buildTree = function(dimensions, points, depth, parent)
     local dim = depth % #dimensions
     local median
     local node
@@ -29,13 +208,23 @@ function buildTree(points, dimensions, depth, parent)
     --
     median = math.floor(#points / 2)
     node = Node:new(nil, points[median], dim, parent)
-    node.left = buildTree(points.slice(0, median), depth + 1, node)
-    node.right = buildTree(points.slice(median + 1), depth + 1, node)
+    node.left = buildTree(dimensions, points.slice(0, median), depth + 1, node)
+    node.right = buildTree(dimensions, points.slice(median + 1), depth + 1, node)
     --
     return node
 end
 
-local innerSearch = function(node, parent, point)
+-- kD-Tree instancing
+function KD_tree:new(points, metric, dimensions)
+    self.metric = metric
+    self.dimensions = dimensions
+    -- TODO
+    -- if (!Array.isArray(points)) loadTree(points, metric, dimensions);
+    -- else
+    self.root = buildTree(dimensions, points, 0, nil)
+end
+
+function KD_tree:innerSearch(node, parent, point)
     if node == nil then
        return parent
     end
@@ -48,7 +237,7 @@ local innerSearch = function(node, parent, point)
 end
 
 function KD_tree:insertToTree(point)
-    local insertPosition = innerSearch(self.root, nil, point)
+    local insertPosition = self.innerSearch(self.root, nil, point)
     local newNode
     local dimension
 
@@ -98,7 +287,7 @@ function KD_tree:findMax(node, dim)
         return nil
     end
 
-    dimension = tree.dimensions[dim]
+    dimension = self.dimensions[dim]
     if node.dimension == dim then
         if node.right ~= nil then
             return self.findMax(node.right, dim)
@@ -157,7 +346,7 @@ function KD_tree:findMin(node, dim)
 end
 
 -- A height function from balanceFactor
-function bf_height(node)
+local bf_height = function(node)
     if node == nil then
         return 0
     end
@@ -165,14 +354,14 @@ function bf_height(node)
 end
 
 -- A count function from balanceFactor
-function bf_count(node)
+local bf_count = function(node)
     if node == nil then
         return 0
     end
     return bf_count(node.left) + bf_count(node.right) + 1
 end
 
-function KD_tree:balanceFactor(node)
+function KD_tree:balanceFactor()
     return bf_height(self.root) / (math.log(bf_count(self.root)) / math.log(2))
 end
 
@@ -218,7 +407,7 @@ function KD_tree:remove(point)
 end
 
 -- Previously a part of nearestSearch
-function saveNode(node, distance, maxNodes, bestNodes)
+local saveNode = function(node, distance, maxNodes, bestNodes)
     bestNodes.push({node, distance})
     if bestNodes.size() > maxNodes then
         bestNodes.pop()
@@ -234,13 +423,12 @@ function KD_tree:nearestSearch(node, point, bestNodes, maxNodes)
     local linearPoint = {}
     local linearDistance
     local otherChild
-    local i
 
-    for i=0, #self.dimensions, 1 do
-        if i == node.dimension then
-            linearPoint[self.dimensions[i]] = point[self.dimensions[i]]
+    for dim_idx=0, #self.dimensions, 1 do
+        if dim_idx == node.dimension then
+            linearPoint[self.dimensions[dim_idx]] = point[self.dimensions[dim_idx]]
         else
-            linearPoint[self.dimensions[i]] = node.obj[self.dimensions[i]]
+            linearPoint[self.dimensions[dim_idx]] = node.obj[self.dimensions[dim_idx]]
         end
     end
 
@@ -291,14 +479,13 @@ end
 
 -- Was called treeNearest in JS version
 function KD_tree:nearest(point, maxNodes, maxDistance)
-    local i
     local result
     local bestNodes
 
     bestNodes = BinaryHeap:new(nil, score_fn)
 
     if maxDistance then
-        for i=0, maxNodes, 1 do
+        for _=0, maxNodes, 1 do
             bestNodes.push({nil, maxDistance})
         end
     end
@@ -313,11 +500,4 @@ function KD_tree:nearest(point, maxNodes, maxDistance)
         end
     end
     return result
-end
-
--- kD-Tree instancing
-function KD_tree:new(points, metric, dimensions)
-    self.metric = metric
-    self.dimensions = dimensions
-    self.root = buildTree(points, dimensions, 0, nil)
 end
