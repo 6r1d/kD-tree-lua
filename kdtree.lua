@@ -230,9 +230,9 @@ function KD_tree:innerSearch(node, parent, point)
     end
     local dimension = self.dimensions[node.dimension]
     if point[dimension] < node.obj[dimension] then
-       return innerSearch(node.left, node)
+       return self.innerSearch(node.left, node)
     else
-       return innerSearch(node.right, node)
+       return self.innerSearch(node.right, node)
     end
 end
 
