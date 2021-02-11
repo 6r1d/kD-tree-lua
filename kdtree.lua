@@ -30,7 +30,6 @@ function BinaryHeap:pop()
     local result = self.content[1]
     -- Get the element at the end of the array
     -- https://www.lua.org/pil/19.2.html
-    -- TODO table.remove(a) or table.remove(a, 1)?
     local array_last = table.remove(self.content)
     -- If there are any elements left, put the end element at the
     -- start, and let it sink down.
@@ -201,7 +200,6 @@ local function buildTree(dimensions, points, depth, parent)
     table.sort(
         points,
         function(a, b)
-            -- TODO Just an untested assumption
             return a[dimensions[dim]] < b[dimensions[dim]]
         end
     )
@@ -218,7 +216,6 @@ end
 function KD_tree:new(points, metric, dimensions)
     self.metric = metric
     self.dimensions = dimensions
-    -- TODO
     -- if (!Array.isArray(points)) loadTree(points, metric, dimensions);
     -- else
     self.root = buildTree(dimensions, points, 0, nil)
