@@ -69,7 +69,7 @@ function KD_tree:insertToTree(point)
 end
 
 -- Previously a part of a KD_tree:remove method
-function KD_tree:treeNodeSearch(node)
+function KD_tree:nodeSearch(node, point)
     if node == nil then
         return nil
     end
@@ -81,9 +81,9 @@ function KD_tree:treeNodeSearch(node)
     local dimension = self.dimensions[node.dimension]
 
     if (point[dimension] < node.obj[dimension]) then
-        return nodeSearch(self.dimensions, node.left, node)
+        return self.nodeSearch(node.left, point)
     else
-        return nodeSearch(self.dimensions, node.right, node)
+        return self.nodeSearch(node.right, point)
     end
 end
 
@@ -210,8 +210,8 @@ function KD_tree:removeNode(dimensions, node)
     node.obj = nextObj
 end
 
-function KD_tree:treeRemoveNode(point)
-    local node = nodeSearch(dimensions, self.root)
+function KD_tree:remove(point)
+    local node = self.nodeSearch(self.root, point)
     if node == nil then
         return
     end
@@ -286,7 +286,7 @@ end
 
 -- A score function for a binary heap in
 -- kDTree's "nearest" method implementation.
-function score_fn(e)
+local score_fn = function(e)
     return -e[1]
 end
 
