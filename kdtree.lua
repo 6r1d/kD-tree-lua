@@ -501,3 +501,5 @@ function KD_tree:nearest(point, maxNodes, maxDistance)
     end
     return result
 end
+
+return KD_tree
