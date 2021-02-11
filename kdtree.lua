@@ -35,21 +35,20 @@ function buildTree(points, dimensions, depth, parent)
     return node
 end
 
-function KD_tree:insertToTree(point)
-    function innerSearch(node, parent)
-        if node == nil then
-            return parent
-        end
-
-        local dimension = self.dimensions[node.dimension]
-        if point[dimension] < node.obj[dimension] then
-            return innerSearch(node.left, node)
-        else
-            return innerSearch(node.right, node)
-        end
+local innerSearch = function(node, parent, point)
+    if node == nil then
+       return parent
     end
+    local dimension = self.dimensions[node.dimension]
+    if point[dimension] < node.obj[dimension] then
+       return innerSearch(node.left, node)
+    else
+       return innerSearch(node.right, node)
+    end
+end
 
-    local insertPosition = innerSearch(self.root, nil)
+function KD_tree:insertToTree(point)
+    local insertPosition = innerSearch(self.root, nil, point)
     local newNode
     local dimension
 
@@ -200,13 +199,13 @@ function KD_tree:removeNode(dimensions, node)
     end
 
     if node.left ~= nil then
-        nextNode = findMax(node.left, node.dimension)
+        nextNode = self.findMax(node.left, node.dimension)
     else
-        nextNode = findMin(node.right, node.dimension)
+        nextNode = self.findMin(node.right, node.dimension)
     end
 
     nextObj = nextNode.obj
-    removeNode(nextNode)
+    self.removeNode(nextNode)
     node.obj = nextObj
 end
 
@@ -249,7 +248,7 @@ function KD_tree:nearestSearch(node, point, bestNodes, maxNodes)
 
     if node.children_nil() then
         if bestNodes.size() < maxNodes or ownDistance < bestNodes.peek()[1] then
-            saveNode(node, ownDistance, maxNodes, bestNodes)
+            self.saveNode(node, ownDistance, maxNodes, bestNodes)
         end
         return
     end
