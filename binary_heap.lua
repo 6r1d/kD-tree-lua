@@ -13,8 +13,8 @@ function BinaryHeap:new(o, scoreFunction)
    setmetatable(o, self)
    -- https://www.lua.org/pil/13.4.1.html
    self.__index = self
-   self.content = {};
-   self.scoreFunction = scoreFunction;
+   self.content = {}
+   self.scoreFunction = scoreFunction
    return o
 end
 
@@ -23,41 +23,41 @@ function BinaryHeap:push(element)
     -- Alternative: foo[#foo+1]="bar"
     table.insert(self.content, element)
     -- Allow it to bubble up.
-    self:bubbleUp(#self.content - 1);
+    self:bubbleUp(#self.content - 1)
 end
 
 function BinaryHeap:pop()
     -- Store the first element so we can return it later.
-    local result = self.content[0]
+    local result = self.content[1]
     -- Get the element at the end of the array
     -- https://www.lua.org/pil/19.2.html
     -- TODO table.remove(a) or table.remove(a, 1)?
     local array_last = table.remove(self.content)
     -- If there are any elements left, put the end element at the
     -- start, and let it sink down.
-    if (#self.content > 0) then
-       self.content[0] = array_last
+    if #self.content > 0 then
+       self.content[1] = array_last
        self.sinkDown(0)
     end
     return result
 end
 
 function BinaryHeap:peek()
-    return self.content[0]
+    return self.content[1]
 end
 
 function BinaryHeap:remove(node)
     local len = #self.content
     -- To remove a value, we must search through the array to find it.
     for i=0, len, 1 do
-        if (this.content[i] == node) then
+        if (self.content[i] == node) then
             -- When it is found, the process seen in 'pop' is repeated
             -- to fill up the hole.
             local ct_end = table.remove(self.content)
             if i ~= len - 1 then
                 self.content[i] = ct_end
-                if (self.scoreFunction(ct_end) < this.scoreFunction(node)) then
-                    this.bubbleUp(i)
+                if (self.scoreFunction(ct_end) < self.scoreFunction(node)) then
+                    self.bubbleUp(i)
                 else
                     self.sinkDown(i)
                 end
@@ -65,7 +65,7 @@ function BinaryHeap:remove(node)
             return
         end
     end
-    print("Node not found.");
+    print("Node not found.")
 end
 
 function BinaryHeap:size()
@@ -104,23 +104,23 @@ function BinaryHeap:sinkDown(n)
         local child2N = (n + 1) * 2
         local child1N = child2N - 1
         -- This is used to store the new position of the element, if any.
-        local swap = null
+        local swap = nil
         -- If the first child exists (is inside the array)...
-        if (child1N < length) then
+        if child1N < length then
             -- Look it up and compute its score.
-            local child1 = this.content[child1N]
-            local child1Score = this.scoreFunction(child1)
+            local child1 = self.content[child1N]
+            local child1Score = self.scoreFunction(child1)
             -- If the score is less than our element's, we need to swap.
             if child1Score < elemScore then
                 swap = child1N
             end
         end
         -- Do the same checks for the other child.
-        if (child2N < length) then
+        if child2N < length then
             local child2 = self.content[child2N]
             local child2Score = self.scoreFunction(child2)
             local chkScore
-            if swap == null then
+            if swap == nil then
                 chkScore = elemScore
             else
                 chkScore = child1Score
@@ -129,13 +129,13 @@ function BinaryHeap:sinkDown(n)
                 swap = child2N
             end
         end
-        -- If the element needs to be moved, swap it, and continue.
-        if swap ~= null then
-            this.content[n] = this.content[swap]
-            this.content[swap] = element
-                n = swap
-        -- Otherwise, we are done.
+        if swap ~= nil then
+            -- If the element needs to be moved, swap it, and continue.
+            self.content[n] = self.content[swap]
+            self.content[swap] = element
+            n = swap
         else
+            -- Otherwise, we are done.
             break
         end
     end

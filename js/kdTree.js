@@ -338,7 +338,8 @@ function saveNode(node, distance, maxNodes, bestNodes) {
     }
 }
 
-// TODO I put these arguments in that order while hating the heavily folded structure of this code. Rearrange. Rearrange hard.
+// TODO I put these arguments in that order while
+// hating the heavily folded structure of this code. Rearrange. Rearrange hard.
 function nearestSearch(node, point, bestNodes, maxNodes) {
     var bestChild,
         dimension = tree.dimensions[node.dimension],

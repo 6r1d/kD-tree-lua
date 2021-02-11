@@ -13,10 +13,19 @@ function Node:new(o, obj, dimension, parent)
    setmetatable(o, self)
    -- https://www.lua.org/pil/13.4.1.html
    self.__index = self
-   this.obj = obj
-   this.left = nil
-   this.right = nil
-   this.parent = parent
-   this.dimension = dimension
+   self.obj = obj
+   self.left = nil
+   self.right = nil
+   self.parent = parent
+   self.dimension = dimension
    return o
+end
+
+function Node:parent_nil()
+   return self.parent == nil
+end
+
+-- Both left and right tree children are unset
+function Node:children_nil()
+   return self.right == nil and self.left == nil
 end
