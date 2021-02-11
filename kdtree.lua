@@ -186,7 +186,7 @@ local KD_tree = {
     root = nil
 }
 
-local buildTree = function(dimensions, points, depth, parent)
+local function buildTree(dimensions, points, depth, parent)
     local dim = depth % #dimensions
     local median
     local node
@@ -345,23 +345,23 @@ function KD_tree:findMin(node, dim)
     return min
 end
 
--- A height function from balanceFactor
-local bf_height = function(node)
-    if node == nil then
-        return 0
-    end
-    return math.max(bf_height(node.left), bf_height(node.right)) + 1
-end
-
--- A count function from balanceFactor
-local bf_count = function(node)
-    if node == nil then
-        return 0
-    end
-    return bf_count(node.left) + bf_count(node.right) + 1
-end
-
 function KD_tree:balanceFactor()
+    -- A height function from balanceFactor
+    local function bf_height(node)
+        if node == nil then
+            return 0
+        end
+        return math.max(bf_height(node.left), bf_height(node.right)) + 1
+    end
+
+    -- A count function from balanceFactor
+    local function bf_count(node)
+        if node == nil then
+            return 0
+        end
+        return bf_count(node.left) + bf_count(node.right) + 1
+    end
+
     return bf_height(self.root) / (math.log(bf_count(self.root)) / math.log(2))
 end
 
