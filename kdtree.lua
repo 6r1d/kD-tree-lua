@@ -411,8 +411,6 @@ local saveNode = function(node, distance, maxNodes, bestNodes)
     end
 end
 
--- TODO I put these arguments in that order while
--- hating the heavily folded structure of this code. Rearrange. Rearrange hard.
 function KD_tree:nearestSearch(node, point, bestNodes, maxNodes)
     local bestChild
     local dimension = self.dimensions[node.dimension]
