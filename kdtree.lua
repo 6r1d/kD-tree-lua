@@ -157,22 +157,24 @@ function KD_tree:findMin(node, dim)
     return min
 end
 
+-- A height function from balanceFactor
+function bf_height(node)
+    if node == nil then
+        return 0
+    end
+    return math.max(bf_height(node.left), bf_height(node.right)) + 1
+end
+
+-- A count function from balanceFactor
+function bf_count(node)
+    if node == nil then
+        return 0
+    end
+    return bf_count(node.left) + bf_count(node.right) + 1
+end
+
 function KD_tree:balanceFactor(node)
-    function height(node)
-        if node == nil then
-            return 0
-        end
-        return math.max(height(node.left), height(node.right)) + 1
-    end
-
-    function count(node)
-        if node == nil then
-            return 0
-        end
-        return count(node.left) + count(node.right) + 1
-    end
-
-    return height(self.root) / (math.log(count(self.root)) / math.log(2))
+    return bf_height(self.root) / (math.log(bf_count(self.root)) / math.log(2))
 end
 
 -- Previously a part of a KD_tree:remove method
