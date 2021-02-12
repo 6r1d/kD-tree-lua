@@ -34,7 +34,7 @@ function BinaryHeap:pop()
     -- start, and let it sink down.
     if #self.content > 0 then
        self.content[1] = array_last
-       self.sinkDown(0)
+       self:sinkDown(0)
     end
     return result
 end
@@ -54,9 +54,9 @@ function BinaryHeap:remove(node)
             if i ~= len - 1 then
                 self.content[i] = ct_end
                 if (self.scoreFunction(ct_end) < self.scoreFunction(node)) then
-                    self.bubbleUp(i)
+                    self:bubbleUp(i)
                 else
-                    self.sinkDown(i)
+                    self:sinkDown(i)
                 end
             end
             return
@@ -243,14 +243,14 @@ function KD_tree:innerSearch(node, parent, point)
     end
     local dimension = self.dimensions[node.dimension]
     if point[dimension] < node.obj[dimension] then
-       return self.innerSearch(node.left, node)
+       return self:innerSearch(node.left, node)
     else
-       return self.innerSearch(node.right, node)
+       return self:innerSearch(node.right, node)
     end
 end
 
 function KD_tree:insertToTree(point)
-    local insertPosition = self.innerSearch(self.root, nil, point)
+    local insertPosition = self:innerSearch(self.root, nil, point)
     local newNode
     local dimension
 
@@ -282,9 +282,9 @@ function KD_tree:nodeSearch(node, point)
     local dimension = self.dimensions[node.dimension]
 
     if (point[dimension] < node.obj[dimension]) then
-        return self.nodeSearch(node.left, point)
+        return self:nodeSearch(node.left, point)
     else
-        return self.nodeSearch(node.right, point)
+        return self:nodeSearch(node.right, point)
     end
 end
 
@@ -303,14 +303,14 @@ function KD_tree:findMax(node, dim)
     dimension = self.dimensions[dim]
     if node.dimension == dim then
         if node.right ~= nil then
-            return self.findMax(node.right, dim)
+            return self:findMax(node.right, dim)
         end
         return node
     end
 
     own = node.obj[dimension]
-    left = self.findMax(node.left, dim)
-    right = self.findMax(node.right, dim)
+    left = self:findMax(node.left, dim)
+    right = self:findMax(node.right, dim)
     max = node
 
     if left ~= nil and left.obj[dimension] > own then
@@ -339,14 +339,14 @@ function KD_tree:findMin(node, dim)
 
     if node.dimension == dim then
         if node.left ~= nil then
-            return self.findMin(node.left, dim)
+            return self:findMin(node.left, dim)
         end
         return node
     end
 
     own = node.obj[dimension]
-    left = self.findMin(node.left, dim)
-    right = self.findMin(node.right, dim)
+    left = self:findMin(node.left, dim)
+    right = self:findMin(node.right, dim)
     min = node
 
     if left ~= nil and left.obj[dimension] < own then
@@ -401,22 +401,22 @@ function KD_tree:removeNode(dimensions, node)
     end
 
     if node.left ~= nil then
-        nextNode = self.findMax(node.left, node.dimension)
+        nextNode = self:findMax(node.left, node.dimension)
     else
-        nextNode = self.findMin(node.right, node.dimension)
+        nextNode = self:findMin(node.right, node.dimension)
     end
 
     nextObj = nextNode.obj
-    self.removeNode(nextNode)
+    self:removeNode(nextNode)
     node.obj = nextObj
 end
 
 function KD_tree:remove(point)
-    local node = self.nodeSearch(self.root, point)
+    local node = self:nodeSearch(self.root, point)
     if node == nil then
         return
     end
-    self.removeNode(node)
+    self:removeNode(node)
 end
 
 -- Previously a part of nearestSearch
@@ -447,7 +447,7 @@ function KD_tree:nearestSearch(node, point, bestNodes, maxNodes)
 
     if node.children_nil() then
         if bestNodes.size() < maxNodes or ownDistance < bestNodes.peek()[1] then
-            self.saveNode(node, ownDistance, maxNodes, bestNodes)
+            self:saveNode(node, ownDistance, maxNodes, bestNodes)
         end
         return
     end
@@ -464,7 +464,7 @@ function KD_tree:nearestSearch(node, point, bestNodes, maxNodes)
         end
     end
 
-    self.nearestSearch(bestChild, point, bestNodes, maxNodes)
+    self:nearestSearch(bestChild, point, bestNodes, maxNodes)
 
     if bestNodes.size() < maxNodes or ownDistance < bestNodes.peek()[1] then
         saveNode(node, ownDistance, maxNodes, bestNodes)
@@ -477,7 +477,7 @@ function KD_tree:nearestSearch(node, point, bestNodes, maxNodes)
             otherChild = node.left
         end
         if otherChild ~= nil then
-            self.nearestSearch(otherChild, point, bestNodes, maxNodes)
+            self:nearestSearch(otherChild, point, bestNodes, maxNodes)
         end
     end
 end
@@ -497,11 +497,11 @@ function KD_tree:nearest(point, maxNodes, maxDistance, score_fn)
 
     if maxDistance ~= nil then
         for _=0, maxNodes, 1 do
-            bestNodes.push({nil, maxDistance})
+            bestNodes:push({nil, maxDistance})
         end
     end
 
-    self.nearestSearch(self.root, point, bestNodes, maxNodes);
+    self:nearestSearch(self.root, point, bestNodes, maxNodes);
 
     result = {}
 
