@@ -17,10 +17,9 @@ function BinaryHeap:new(o, scoreFunction)
    return o
 end
 
-function BinaryHeap:push(element)
-    -- Add the new element to the end of the array.
-    -- Alternative: foo[#foo+1]="bar"
-    table.insert(self.content, element)
+function BinaryHeap:push(el)
+    -- Add the new element to the end of the array
+    table.insert(self.content, el)
     -- Allow it to bubble up.
     self:bubbleUp(#self.content - 1)
 end
@@ -185,8 +184,18 @@ local KD_tree = {
     root = nil
 }
 
+local function table_slice(tbl, first, last, step)
+  local sliced = {}
+  --
+  for i = first or 1, last or #tbl, step or 1 do
+    sliced[#sliced+1] = tbl[i]
+  end
+  --
+  return sliced
+end
+
 local function buildTree(dimensions, points, depth, parent)
-    local dim = depth % #dimensions
+    local dim = depth % #dimensions + 1
     local median
     local node
     --
@@ -196,29 +205,36 @@ local function buildTree(dimensions, points, depth, parent)
     if #points == 1 then
         return Node:new(nil, points[1], dim, parent)
     end
-    --
-    table.sort(
-        points,
-        function(a, b)
-            return a[dimensions[dim]] < b[dimensions[dim]]
-        end
-    )
+    -- TODO check a condition
+    if points ~= nil and points[1][dimensions[dim]] then
+        table.sort(
+            points,
+            function(a, b)
+                return a[dimensions[dim]] < b[dimensions[dim]]
+            end
+        )
+    end
     --
     median = math.floor(#points / 2)
     node = Node:new(nil, points[median], dim, parent)
-    node.left = buildTree(dimensions, points.slice(0, median), depth + 1, node)
-    node.right = buildTree(dimensions, points.slice(median + 1), depth + 1, node)
+
+    node.left = buildTree(dimensions, table_slice(points, 0, median), depth + 1, node)
+    node.right = buildTree(dimensions, table_slice(points, median + 1), depth + 1, node)
     --
     return node
 end
 
 -- kD-Tree instancing
-function KD_tree:new(points, metric, dimensions)
+function KD_tree:new(o, points, metric, dimensions)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
     self.metric = metric
     self.dimensions = dimensions
     -- if (!Array.isArray(points)) loadTree(points, metric, dimensions);
     -- else
     self.root = buildTree(dimensions, points, 0, nil)
+    return o
 end
 
 function KD_tree:innerSearch(node, parent, point)
@@ -473,13 +489,13 @@ local score_fn = function(e)
 end
 
 -- Was called treeNearest in JS version
-function KD_tree:nearest(point, maxNodes, maxDistance)
+function KD_tree:nearest(point, maxNodes, maxDistance, score_fn)
     local result
     local bestNodes
 
     bestNodes = BinaryHeap:new(nil, score_fn)
 
-    if maxDistance then
+    if maxDistance ~= nil then
         for _=0, maxNodes, 1 do
             bestNodes.push({nil, maxDistance})
         end

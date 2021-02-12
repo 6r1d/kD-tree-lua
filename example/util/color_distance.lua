@@ -1,7 +1,9 @@
 -- A color distance function ported from kdTree.js demo.
 -- Essentially, it tells how different the colors are.
+-- Demo's one was based on a color distance from
+-- http://www.compuphase.com/cmetric.htm
 --
--- Receives Lua's dicts with color ranges from 0 to 255 like
+-- `col_a` and `col_b` arguments accept Lua tables with color ranges from 0 to 255 like
 -- { red = 127, green = 127, blue = 127 }
 
 function color_distance(col_a, col_b)
